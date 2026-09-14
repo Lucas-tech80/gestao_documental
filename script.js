@@ -14,26 +14,11 @@ const PLANILHA_DOCUMENTO_IDS = new Set([
 // Valores auditados da coluna "dias" na aba "documentação" (71 registros).
 const PLANILHA_DIAS = [-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,208,2311,698,698,-46268,-46268,155,157,142,131,-46268,-46268,606,-46268,3083,37,118,-151,23,23,54,18,143,143,46,119,-20,149,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-9,119,119,-46268,-46268,-46268,119,756,196,-7,-7,-7,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268,-46268];
 const PLANILHA_CONTRATOS_SEM_VENCIMENTO = 39;
-const DOCUMENTOS_OCULTOS_NA_LISTAGEM = new Set([5, 37, 51, 62, 63, 64]);
+const DOCUMENTOS_OCULTOS_NA_LISTAGEM = new Set([5, 37, 51, 63, 64]);
 const DOCUMENTOS_APRESENTACAO_PLANILHA = {
   51: {
     apelido: 'MHS - CERTIFICADO DE REGULARIDADE DO FGTS',
     orgao_expeditor: 'CEF - CAIXA ECONOMICA FEDERAL',
-    categoria: 'jurídico'
-  },
-  62: {
-    apelido: 'MHS TCU - CERTIDÃO NADA CONSTA',
-    orgao_expeditor: 'TRIBUNAL DE CONTAS DA UNIAO',
-    categoria: 'jurídico'
-  },
-  63: {
-    apelido: 'MHS TCU - CERTIDÃO DE CONTAS JULGADAS IRREGULARES NEGATIVA',
-    orgao_expeditor: 'TRIBUNAL DE CONTAS DA UNIAO',
-    categoria: 'jurídico'
-  },
-  64: {
-    apelido: 'MHS TCU - CERTIDÃO NEGATIVA DE LICITANTES INIDONEOS',
-    orgao_expeditor: 'TRIBUNAL DE CONTAS DA UNIAO',
     categoria: 'jurídico'
   }
 };
@@ -354,6 +339,9 @@ document.addEventListener('alpine:init', () => {
 
     normalizarDocumento(doc) {
       const documento = { ...doc };
+      documento.descricao = documento.descricao || documento.descricao_observacao;
+      documento.site = documento.site || documento.site_email;
+      documento.caminho_arquivo = documento.caminho_arquivo || documento.caminhoArquivo || documento.arquivo;
       const vencimentoTexto = documento.vencimento != null ? String(documento.vencimento) : '';
       const statusAtual = this.getStatusPrazo(documento);
       const dias = this.getDiasRestantes(documento);
