@@ -408,6 +408,10 @@ document.addEventListener('alpine:init', () => {
     },
 
     descricaoInternaCurta(doc) {
+      const descricaoExibidaCompleta = this.descricaoInternaCompleta(doc)
+        .replace(/^MHS\b\s*/i, '')
+        .replace(/\s+-\s+/g, ' ')
+        .trim();
       const prepararPalavras = (item) => this.descricaoInternaCompleta(item)
         .replace(/^MHS\b\s*/i, '')
         .replace(/\s+-\s+/g, ' ')
@@ -415,17 +419,65 @@ document.addEventListener('alpine:init', () => {
         .split(/\s+/)
         .filter(Boolean);
 
-      const palavras = prepararPalavras(doc);
-      if (palavras.length === 0) return '-';
-
-      const resumo = palavras.slice(0, 2).join(' ');
       const normalizarResumo = (texto) => texto.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
-      const chaveResumo = normalizarResumo(resumo);
-      const duplicado = this.documentosVisiveisNaListagem.some((item) =>
-        item.id !== doc.id && normalizarResumo(prepararPalavras(item).slice(0, 2).join(' ')) === chaveResumo
+      const normalizarPalavra = (texto) => normalizarResumo(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const palavrasDoc = prepararPalavras(doc);
+      const palavrasNormalizadas = palavrasDoc.map(normalizarPalavra);
+      const casoCertidaoNegativa = palavrasNormalizadas.some((palavra, indice) =>
+        palavra === 'certidao' && palavrasNormalizadas[indice + 1] === 'negativa'
       );
+      const casoTcuCertidaoNada = palavrasNormalizadas[0] === 'tcu' &&
+        palavrasNormalizadas[1] === 'certidao' && palavrasNormalizadas[2] === 'nada';
+      const casoExibirCompleto = casoCertidaoNegativa || casoTcuCertidaoNada;
+      if (casoExibirCompleto) return descricaoExibidaCompleta || '-';
 
-      return duplicado && palavras[2] ? palavras.slice(0, 3).join(' ') : resumo;
+      const palavrasDeLigacao = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para']);
+      const palavrasGenericasCertidao = new Set(['certidão', 'negativa']);
+      const entradas = this.documentosVisiveisNaListagem.map((item) => {
+        const palavras = prepararPalavras(item);
+        let quantidade = Math.min(2, palavras.length);
+
+        // "Certidão" e "certidão negativa" precisam do assunto para identificar o documento.
+        const indiceCertidao = palavras.findIndex((palavra) => normalizarResumo(palavra) === 'certidão');
+        if (indiceCertidao >= 0) {
+          let indiceAssunto = indiceCertidao + 1;
+          while (indiceAssunto < palavras.length &&
+            (palavrasDeLigacao.has(normalizarResumo(palavras[indiceAssunto])) ||
+             palavrasGenericasCertidao.has(normalizarResumo(palavras[indiceAssunto])))) {
+            indiceAssunto += 1;
+          }
+          if (indiceAssunto < palavras.length) quantidade = Math.max(quantidade, indiceAssunto + 1);
+        }
+
+        // Um resumo não deve acabar em conectivo, mesmo quando não há colisão.
+        while (quantidade < palavras.length && palavrasDeLigacao.has(normalizarResumo(palavras[quantidade - 1]))) {
+          quantidade += 1;
+        }
+        return { documento: item, palavras, quantidade };
+      });
+
+      // Expande apenas rótulos visualmente duplicados; conectivos finais são completados juntos.
+      let houveExpansao = true;
+      while (houveExpansao) {
+        houveExpansao = false;
+        const rotulos = entradas.map((entrada) => normalizarResumo(entrada.palavras.slice(0, entrada.quantidade).join(' ')));
+        entradas.forEach((entrada, indice) => {
+          if (!rotulos[indice] || !rotulos.some((rotulo, outroIndice) => outroIndice !== indice && rotulo === rotulos[indice])) return;
+          if (entrada.quantidade >= entrada.palavras.length) return;
+          entrada.quantidade += 1;
+          while (entrada.quantidade < entrada.palavras.length &&
+            palavrasDeLigacao.has(normalizarResumo(entrada.palavras[entrada.quantidade - 1]))) {
+            entrada.quantidade += 1;
+          }
+          houveExpansao = true;
+        });
+      }
+
+      // A listagem aplica dados de apresentação com spread e cria clones dos documentos.
+      const entradaAtual = entradas.find((entrada) => entrada.documento === doc) ||
+        (doc.id != null ? entradas.find((entrada) => entrada.documento.id === doc.id) : null);
+      if (!entradaAtual || entradaAtual.palavras.length === 0) return '-';
+      return entradaAtual.palavras.slice(0, entradaAtual.quantidade).join(' ');
     },
 
     exportarCSV() {
