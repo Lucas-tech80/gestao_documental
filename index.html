@@ -194,7 +194,7 @@
             <tr @click="selected = doc"
                 class="cursor-pointer transition-colors hover:bg-slate-50 group">
               <td class="px-5 py-4">
-                <div class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors" x-text="nomeDocumento(doc)"></div>
+                <div class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors" :title="descricaoInternaCompleta(doc)" x-text="descricaoInternaCurta(doc)"></div>
               </td>
               <td class="px-5 py-4 text-slate-600" x-text="doc.orgao_expeditor || doc.orgaoExpeditor || '-'"></td>
               <td class="px-5 py-4 text-slate-600" x-text="doc.categoria || '-'"></td>

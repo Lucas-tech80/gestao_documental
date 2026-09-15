@@ -5,6 +5,10 @@ html { scroll-behavior: smooth; }
 
 .summary-card::before{content:'↗';position:absolute;right:.65rem;top:.55rem;font-size:.9rem;font-weight:800;line-height:1;opacity:.62}
 
+/* Oculta apenas a barra da rolagem da página; a rolagem do documento permanece ativa. */
+html,body{scrollbar-width:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+
 @media(min-width:1024px){.summary-panel,.category-panel{height:252px}.category-panel__scroll{min-height:0}}.category-panel__scroll{overscroll-behavior:contain}@media(max-width:1023px){.category-panel__scroll{max-height:320px}}
 
 /* Ajuste exclusivo da tabela de categorias em telas menores */

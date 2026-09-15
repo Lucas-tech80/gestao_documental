@@ -402,6 +402,32 @@ document.addEventListener('alpine:init', () => {
     },
 
     // --- MOTOR DE EXPORTAÇÃO CSV ---
+    descricaoInternaCompleta(doc) {
+      if (!doc) return '';
+      return String(doc.descricao || doc.descricao_observacao || '').trim();
+    },
+
+    descricaoInternaCurta(doc) {
+      const prepararPalavras = (item) => this.descricaoInternaCompleta(item)
+        .replace(/^MHS\b\s*/i, '')
+        .replace(/\s+-\s+/g, ' ')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      const palavras = prepararPalavras(doc);
+      if (palavras.length === 0) return '-';
+
+      const resumo = palavras.slice(0, 2).join(' ');
+      const normalizarResumo = (texto) => texto.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
+      const chaveResumo = normalizarResumo(resumo);
+      const duplicado = this.documentosVisiveisNaListagem.some((item) =>
+        item.id !== doc.id && normalizarResumo(prepararPalavras(item).slice(0, 2).join(' ')) === chaveResumo
+      );
+
+      return duplicado && palavras[2] ? palavras.slice(0, 3).join(' ') : resumo;
+    },
+
     exportarCSV() {
       const docs = this.filteredDocumentos;
       if (docs.length === 0) {
