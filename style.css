@@ -11,6 +11,12 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
 
 @media(min-width:1024px){.summary-panel,.category-panel{height:252px}.category-panel__scroll{min-height:0}}.category-panel__scroll{overscroll-behavior:contain}@media(max-width:1023px){.category-panel__scroll{max-height:320px}}
 
+/* Oculta visualmente apenas a barra vertical da tabela de categorias no desktop, mantendo a rolagem ativa. */
+@media(min-width:1024px){
+  .category-panel__scroll{scrollbar-width:none;-ms-overflow-style:none}
+  .category-panel__scroll::-webkit-scrollbar{display:none;width:0;height:0}
+}
+
 /* Ajuste exclusivo da tabela de categorias em telas menores */
 @media(max-width:1023px){
   .category-panel__scroll{overflow-x:hidden}
